@@ -23,6 +23,7 @@ export default function ChatWidget() {
   const [visitorName, setVisitorName] = useState('');
   const [visitorEmail, setVisitorEmail] = useState('');
   const [composeText, setComposeText] = useState('');
+  const [isStarting, setIsStarting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll chat to bottom
@@ -51,22 +52,32 @@ export default function ChatWidget() {
 
   const startConversation = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!visitorName || !visitorEmail) return;
+    if (!visitorName || !visitorEmail || isStarting) return;
 
-    const initialMsg: ChatMessage = {
-      id: `msg-bot-${Date.now()}`,
-      sender: 'bot',
-      text: `Hi ${visitorName}! Thanks for reaching out. What can I help you with today?`,
-      timestamp: new Date().toISOString()
-    };
+    setIsStarting(true);
+    try {
+      const initialMsg: ChatMessage = {
+        id: `msg-bot-${Date.now()}`,
+        sender: 'bot',
+        text: `Hi ${visitorName}! Thanks for reaching out. What can I help you with today?`,
+        timestamp: new Date().toISOString()
+      };
 
-    const result = await apiStartConversation(visitorName, visitorEmail, initialMsg);
-    
-    if (result.success && result.conversation) {
-      const dbConv = result.conversation;
-      portfolioStore.setConversations([...conversations, dbConv]);
-      setSessionConvId(dbConv._id || dbConv.id);
-      sessionStorage.setItem('chat-session-id', dbConv._id || dbConv.id);
+      const result = await apiStartConversation(visitorName, visitorEmail, initialMsg);
+      
+      if (result.success && result.conversation) {
+        const dbConv = result.conversation;
+        portfolioStore.setConversations([...conversations, dbConv]);
+        setSessionConvId(dbConv._id || dbConv.id);
+        sessionStorage.setItem('chat-session-id', dbConv._id || dbConv.id);
+      } else {
+        alert(result.error || "Failed to start conversation. Please check your connection.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("A server error occurred. Please try again later.");
+    } finally {
+      setIsStarting(false);
     }
   };
 
@@ -162,8 +173,8 @@ export default function ChatWidget() {
                       style={{ paddingLeft: '40px' }} 
                     />
                   </div>
-                  <button type="submit" className="btn-luxury" style={{ padding: '0.8rem', width: '100%', fontSize: '0.8rem', background: 'var(--accent)', border: 'none' }}>
-                    Start Chat
+                  <button type="submit" disabled={isStarting} className="btn-luxury" style={{ padding: '0.8rem', width: '100%', fontSize: '0.8rem', background: 'var(--accent)', border: 'none', opacity: isStarting ? 0.7 : 1 }}>
+                    {isStarting ? "Connecting..." : "Start Chat"}
                   </button>
                 </form>
               ) : (
