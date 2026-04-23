@@ -6,22 +6,6 @@ import { useSyncExternalStore, useEffect } from 'react';
 import { portfolioStore } from '@/lib/portfolioStore';
 
 export default function Navbar() {
-  const { settings } = useSyncExternalStore(
-    portfolioStore.subscribe,
-    portfolioStore.getSnapshot,
-    portfolioStore.getServerSnapshot
-  );
-
-  useEffect(() => {
-    if (!settings.faviconUrl) return;
-    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'icon';
-      document.head.appendChild(link);
-    }
-    link.href = settings.faviconUrl;
-  }, [settings.faviconUrl]);
 
   return (
     <motion.nav 
