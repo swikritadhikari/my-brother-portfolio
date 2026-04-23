@@ -1,49 +1,378 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Outfit:wght@300;600;900&family=Syne:wght@400;700;800&display=swap");
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html {
-  height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --bg-color: #050505;
+  --text-main: #ffffff;
+  --text-dim: #888888;
+  --accent: #3b82f6;
+  --accent-2: #8b5cf6;
+  --accent-glow: rgba(59, 130, 246, 0.2);
+  --glass: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --transition-slow: 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 * {
-  box-sizing: border-box;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+html.lenis {
+  height: auto;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: "Inter", sans-serif;
+  overflow-x: hidden;
+  line-height: 1.2;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Film Grain Noise Effect */
+.noise-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  background-image: url("https://www.transparenttextures.com/patterns/p6.png");
+  opacity: 0.15;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* Advanced Typography */
+h1,
+h2,
+h3 {
+  font-family: "Syne", sans-serif;
+  text-transform: uppercase;
+}
+
+.reveal-text {
+  overflow: hidden;
+  display: block;
+}
+
+.reveal-text span {
+  display: block;
+}
+
+.text-hero {
+  font-size: clamp(4rem, 12vw, 10rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.85;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* UI Elements */
+.container {
+  width: 92%;
+  max-width: 1800px;
+  margin: 0 auto;
+}
+
+.glass-nav {
+  padding: 1.2rem 3rem;
+  background: rgba(255, 255, 255, 0.01);
+  backdrop-filter: blur(40px);
+  border: 1px solid var(--glass-border);
+  border-radius: 100px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.nav-links {
+  display: flex;
+  gap: 3rem;
+  align-items: center;
+}
+
+.magnetic-btn {
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.hero-section {
+  min-height: 100vh;
+  padding: 25vh 0 20vh;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-luxury {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  padding: 1.5rem 3rem;
+  border-radius: 100px;
+  color: white;
+  font-family: "Syne";
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: 0.4s;
+}
+
+.btn-luxury::before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  transition: 0.4s;
+  z-index: -1;
+}
+
+.btn-luxury:hover {
+  color: black;
+}
+
+.btn-luxury:hover::before {
+  top: 0;
+}
+
+.hover-accent {
+  transition: 0.3s ease;
+  color: var(--text-main);
+}
+
+.hover-accent:hover {
+  color: var(--accent);
+}
+
+.reveal-text {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.1em;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+/* Glass card */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(20px);
+}
+
+/* Admin area reset: disable lenis smooth-scroll inside the admin scroll container */
+#admin-scroll {
+  overflow-y: auto;
+}
+
+/* Section padding */
+.section-padding {
+  padding: 10rem 0;
+}
+
+/* Utility */
+.min-h-screen { min-height: 100vh; }
+.text-section {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+/* Hero glow */
+.hero-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70vw;
+  height: 70vw;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Admin Styling */
+.admin-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 14px 20px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.admin-input:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+.admin-input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.admin-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 8px;
+}
+
+/* Custom Scrollbar for Admin Panel */
+.admin-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+
+.admin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
+
+.admin-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* flex utilities */
+.flex { display: flex; }
+.center { align-items: center; justify-content: center; }
+.column { flex-direction: column; }
+.relative { position: relative; }
+.absolute { position: absolute; }
+.fixed { position: fixed; }
+.z-high { z-index: 1000; }
+
+/* grid-portfolio kept for video cards */
+.grid-portfolio {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 4rem;
+  margin-top: 4rem;
+}
+
+/* Video card */
+.video-card-thumb {
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+}
+
+.play-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white !important;
+  opacity: 0.9;
+}
+
+.video-card:hover .play-button {
+  transform: translate(-50%, -50%) scale(1.1);
+  background: var(--accent) !important;
+  border-color: var(--accent);
+  opacity: 1;
+}
+
+.video-card {
+  cursor: pointer;
+}
+/* RESPONSIVE DESIGN */
+@media (max-width: 1024px) {
+  .grid-portfolio {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 3rem 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .glass-nav {
+    padding: 1rem 1.5rem;
+  }
+  .nav-links {
+    display: none; /* Hide desktop nav on mobile */
+  }
+  .hero-section {
+    padding: 15vh 0 10vh;
+  }
+  .text-hero {
+    font-size: 3.5rem;
+    line-height: 0.9;
+  }
+  .grid-portfolio {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  .section-padding {
+    padding: 6rem 0;
+  }
+  .footer-reveal h2 {
+    font-size: 3rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .text-hero {
+    font-size: 2.8rem;
+  }
+  .hero-section p {
+    font-size: 1.1rem !important;
   }
 }
