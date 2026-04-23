@@ -422,7 +422,7 @@ export default function AdminPage() {
         // filter out videos already in store by youtubeId to avoid duplicates
         const existingIds = videos.map((v) => v.youtubeId);
         const newVids = result.videos.filter(
-          (v: any) => !existingIds.includes(v.youtubeId),
+          (v: { youtubeId: string }) => !existingIds.includes(v.youtubeId),
         );
 
         if (newVids.length > 0) {
@@ -435,8 +435,8 @@ export default function AdminPage() {
       } else {
         setImportMessage(result.error || "Failed to parse any videos.");
       }
-    } catch (e: any) {
-      setImportMessage(e.message || "An error occurred.");
+    } catch (e: unknown) {
+      setImportMessage((e as Error).message || "An error occurred.");
     } finally {
       setIsImporting(false);
       setTimeout(() => setImportMessage(""), 5000);
@@ -573,7 +573,7 @@ export default function AdminPage() {
               color: "rgba(255,255,255,0.1)",
             }}
           >
-            Demo: admin123
+            Please enter your administrator credentials
           </p>
         </motion.div>
       </div>
@@ -1338,7 +1338,7 @@ export default function AdminPage() {
                     ))}
                     <div>
                       <label className={LABEL_CLS}>
-                        Hero "Watch Showreel" YouTube IDs (Comma-separated for
+                        Hero &quot;Watch Showreel&quot; YouTube IDs (Comma-separated for
                         multiple!)
                       </label>
                       <input
