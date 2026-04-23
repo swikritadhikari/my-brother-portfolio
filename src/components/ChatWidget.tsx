@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, User, Mail } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import Pusher from 'pusher-js';
 import { portfolioStore, ChatMessage } from '@/lib/portfolioStore';
 import { startConversation as apiStartConversation, saveMessage as apiSaveMessage, getConversations } from '@/app/actions/chat';
 
@@ -31,17 +32,32 @@ export default function ChatWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversations, isOpen]);
 
-  // Initial load from DB if available
+  // Initial load and Pusher subscription
   useEffect(() => {
     const load = async () => {
       const dbConvs = await getConversations();
       portfolioStore.setConversations(dbConvs);
       
-      // Reconnect to last session if exists
       const savedId = sessionStorage.getItem('chat-session-id');
       if (savedId) setSessionConvId(savedId);
     };
+    
     load();
+    
+    // Pusher Real-time subscription
+    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    });
+
+    const channel = pusher.subscribe('portfolio-chat');
+    channel.bind('new-message', () => {
+      // Re-fetch conversations when a new message event arrives
+      load();
+    });
+
+    return () => {
+      pusher.unsubscribe('portfolio-chat');
+    };
   }, []);
 
   // Hide on admin pages

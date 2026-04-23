@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useSyncExternalStore, useEffect } from "react";
+import { useState, useEffect, useRef, useSyncExternalStore } from "react";
+import Pusher from "pusher-js";
 import { Video } from "@/data/videos";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -323,7 +324,23 @@ export default function AdminPage() {
       const dbConvs = await getConversations();
       portfolioStore.setConversations(dbConvs);
     };
+    
     load();
+
+    // Pusher Real-time subscription
+    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    });
+
+    const channel = pusher.subscribe('portfolio-chat');
+    channel.bind('new-message', () => {
+      // Re-fetch conversations when a new message event arrives
+      load();
+    });
+
+    return () => {
+      pusher.unsubscribe('portfolio-chat');
+    };
   }, []);
 
   const [activeTab, setActiveTab] = useState<

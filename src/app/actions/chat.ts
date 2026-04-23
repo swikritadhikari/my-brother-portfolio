@@ -3,6 +3,7 @@
 import dbConnect from '@/lib/mongodb';
 import Conversation from '@/models/Conversation';
 import { Conversation as ConversationType, ChatMessage } from '@/lib/portfolioStore';
+import { pusherServer } from '@/lib/pusher';
 
 export async function getConversations() {
   await dbConnect();
@@ -26,6 +27,12 @@ export async function saveMessage(conversationId: string, message: ChatMessage) 
       },
       { new: true }
     );
+
+    // Trigger Pusher event
+    await pusherServer.trigger('portfolio-chat', 'new-message', {
+      conversationId: conversationId
+    });
+
     return { success: true, conversation: JSON.parse(JSON.stringify(updated)) };
   } catch (error) {
     console.error('Failed to save message:', error);
@@ -43,6 +50,12 @@ export async function startConversation(visitorName: string, visitorEmail: strin
       lastUpdate: initialMessage.timestamp,
       messages: [initialMessage]
     });
+
+    // Trigger Pusher event
+    await pusherServer.trigger('portfolio-chat', 'new-message', {
+      conversationId: newConv._id
+    });
+
     return { success: true, conversation: JSON.parse(JSON.stringify(newConv)) };
   } catch (error) {
     console.error('Failed to start conversation:', error);
