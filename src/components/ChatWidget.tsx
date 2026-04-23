@@ -168,7 +168,12 @@ export default function ChatWidget() {
             </div>
 
             {/* Content Area */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }} className="admin-scroll">
+            <div 
+              id="admin-scroll"
+              data-lenis-prevent
+              style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }} 
+              className="admin-scroll"
+            >
               {!activeConv ? (
                 /* Registration Form */
                 <form onSubmit={startConversation} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: 'auto', marginBottom: 'auto' }}>

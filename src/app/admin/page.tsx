@@ -1943,6 +1943,8 @@ export default function AdminPage() {
                         </button>
                       </div>
                       <div
+                        id="admin-scroll"
+                        data-lenis-prevent
                         style={{
                           flex: 1,
                           overflowY: "auto",
