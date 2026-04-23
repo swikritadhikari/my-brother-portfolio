@@ -48,7 +48,7 @@ export default function ChatWidget() {
   if (pathname?.startsWith('/admin')) return null;
 
   // Find active conversation
-  const activeConv = conversations.find(c => c.id === sessionConvId);
+  const activeConv = conversations.find(c => (c._id || c.id) === sessionConvId);
 
   const startConversation = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +64,7 @@ export default function ChatWidget() {
       };
 
       const result = await apiStartConversation(visitorName, visitorEmail, initialMsg);
+      console.log("Start conversation result:", result);
       
       if (result.success && result.conversation) {
         const dbConv = result.conversation;
