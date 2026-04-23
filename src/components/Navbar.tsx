@@ -6,6 +6,11 @@ import { useSyncExternalStore, useEffect } from 'react';
 import { portfolioStore } from '@/lib/portfolioStore';
 
 export default function Navbar() {
+  const { settings } = useSyncExternalStore(
+    portfolioStore.subscribe,
+    portfolioStore.getSnapshot,
+    portfolioStore.getServerSnapshot
+  );
 
   return (
     <motion.nav 
