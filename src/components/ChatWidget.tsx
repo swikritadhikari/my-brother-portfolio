@@ -3,9 +3,12 @@
 import { useState, useRef, useEffect, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, User, Mail } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { portfolioStore, Conversation, ChatMessage } from '@/lib/portfolioStore';
 
 export default function ChatWidget() {
+  const pathname = usePathname();
+  
   const { conversations } = useSyncExternalStore(
     portfolioStore.subscribe,
     portfolioStore.getSnapshot,
@@ -25,6 +28,9 @@ export default function ChatWidget() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversations, isOpen]);
+
+  // Hide on admin pages
+  if (pathname?.startsWith('/admin')) return null;
 
   // Find active conversation
   const activeConv = conversations.find(c => c.id === sessionConvId);

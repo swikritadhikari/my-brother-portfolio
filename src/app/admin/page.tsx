@@ -742,6 +742,11 @@ export default function AdminPage() {
                   icon={Link2}
                 />
                 <StatCard
+                  label="Unread Messages"
+                  value={conversations.filter(c => c.status === 'new').length}
+                  icon={MessageSquare}
+                />
+                <StatCard
                   label="Contact"
                   value={settings.contactEmail || "—"}
                   icon={Eye}

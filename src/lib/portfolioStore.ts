@@ -142,3 +142,24 @@ export const portfolioStore = {
     listeners.forEach(l => l());
   }
 };
+
+// Cross-tab synchronization
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === STORAGE_KEY && e.newValue) {
+      try {
+        const parsed = JSON.parse(e.newValue);
+        data = {
+          ...data,
+          ...parsed,
+          conversations: parsed.conversations || [],
+          settings: { ...defaultSettings, ...(parsed.settings || {}) }
+        };
+        // Notify all local listeners that the state changed from another tab
+        listeners.forEach(l => l());
+      } catch (e) {
+        console.error('Failed to sync portfolio data from storage event', e);
+      }
+    }
+  });
+}
