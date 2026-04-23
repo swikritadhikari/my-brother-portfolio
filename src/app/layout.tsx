@@ -5,6 +5,7 @@ import CustomCursor from "@/components/CustomCursor";
 import SmoothScroll from "@/components/SmoothScroll";
 import ChatWidget from "@/components/ChatWidget";
 import Preloader from "@/components/Preloader";
+import FaviconManager from "@/components/FaviconManager";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -23,6 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${outfit.variable} ${syne.variable}`} suppressHydrationWarning>
       <body>
+        <FaviconManager />
         <Preloader />
         <div className="noise-overlay" />
         <CustomCursor />
