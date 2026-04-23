@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, User, Mail } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { portfolioStore, Conversation, ChatMessage } from '@/lib/portfolioStore';
+import { portfolioStore, ChatMessage } from '@/lib/portfolioStore';
 import { startConversation as apiStartConversation, saveMessage as apiSaveMessage, getConversations } from '@/app/actions/chat';
 
 export default function ChatWidget() {
@@ -54,7 +54,7 @@ export default function ChatWidget() {
     if (!visitorName || !visitorEmail) return;
 
     const initialMsg: ChatMessage = {
-      id: `msg-bot-${Math.floor(Math.random() * 1000000)}`,
+      id: `msg-bot-${Date.now()}`,
       sender: 'bot',
       text: `Hi ${visitorName}! Thanks for reaching out. What can I help you with today?`,
       timestamp: new Date().toISOString()
@@ -75,7 +75,7 @@ export default function ChatWidget() {
     if (!composeText.trim() || !activeConv) return;
 
     const newMsg: ChatMessage = {
-      id: `msg-${Math.floor(Math.random() * 1000000)}`,
+      id: `msg-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       sender: 'visitor',
       text: composeText.trim(),
       timestamp: new Date().toISOString()
