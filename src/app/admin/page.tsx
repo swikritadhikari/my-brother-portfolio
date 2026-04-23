@@ -24,9 +24,10 @@ import {
   Send,
   X,
 } from "lucide-react";
-import { portfolioStore, SiteSettings } from "@/lib/portfolioStore";
+import { portfolioStore, SiteSettings, ChatMessage } from "@/lib/portfolioStore";
 import { fetchChannelVideos } from "@/app/actions/youtube";
 import { verifyAdminPassword } from "@/app/actions/auth";
+import { getConversations, saveMessage as apiSaveMessage, deleteConversation as apiDeleteConversation } from "@/app/actions/chat";
 
 /*  Small Design Tokens  */
 const INPUT_CLS = "admin-input";
@@ -316,6 +317,13 @@ export default function AdminPage() {
     if (sessionStorage.getItem("admin-auth") === "true") {
       setIsAuthenticated(true);
     }
+    
+    // Initial load of conversations from DB
+    const load = async () => {
+      const dbConvs = await getConversations();
+      portfolioStore.setConversations(dbConvs);
+    };
+    load();
   }, []);
 
   const [activeTab, setActiveTab] = useState<
@@ -1887,13 +1895,18 @@ export default function AdminPage() {
                           </a>
                         </div>
                         <button
-                          onClick={() => {
-                            portfolioStore.updateConversations(
-                              conversations.filter(
-                                (c) => c.id !== activeConv.id,
-                              ),
-                            );
-                            setSelectedConvId(null);
+                          onClick={async () => {
+                            const result = await apiDeleteConversation(activeConv._id || activeConv.id);
+                            if (result.success) {
+                              portfolioStore.setConversations(
+                                conversations.filter(
+                                  (c) => (c._id || c.id) !== (activeConv._id || activeConv.id),
+                                ),
+                              );
+                              setSelectedConvId(null);
+                            } else {
+                              alert("Failed to delete chat.");
+                            }
                           }}
                           style={{
                             padding: "0.6rem 1rem",
@@ -1985,17 +1998,18 @@ export default function AdminPage() {
                         ))}
                       </div>
                       <form
-                        onSubmit={(e) => {
+                        onSubmit={async (e) => {
                           e.preventDefault();
                           if (!replyText.trim()) return;
 
-                          const newMsg = {
+                          const newMsg: ChatMessage = {
                             id: `msg-${Math.floor(Math.random() * 1000000)}`,
                             sender: "bot" as const,
                             text: replyText.trim(),
                             timestamp: new Date().toISOString(),
                           };
 
+                          // Optimistic update
                           const updatedConv = {
                             ...activeConv,
                             messages: [...activeConv.messages, newMsg],
@@ -2003,12 +2017,17 @@ export default function AdminPage() {
                             status: "replied" as const,
                           };
 
-                          portfolioStore.updateConversations(
+                          portfolioStore.setConversations(
                             conversations.map((c) =>
-                              c.id === activeConv.id ? updatedConv : c,
+                              (c._id || c.id) === (activeConv._id || activeConv.id) ? updatedConv : c,
                             ),
                           );
                           setReplyText("");
+
+                          const result = await apiSaveMessage(activeConv._id || activeConv.id, newMsg);
+                          if (!result.success) {
+                            alert("Failed to send reply. Please try again.");
+                          }
                         }}
                         style={{
                           padding: "1.5rem",

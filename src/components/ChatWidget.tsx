@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, User, Mail } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { portfolioStore, Conversation, ChatMessage } from '@/lib/portfolioStore';
+import { startConversation as apiStartConversation, saveMessage as apiSaveMessage, getConversations } from '@/app/actions/chat';
 
 export default function ChatWidget() {
   const pathname = usePathname();
@@ -29,59 +30,72 @@ export default function ChatWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversations, isOpen]);
 
+  // Initial load from DB if available
+  useEffect(() => {
+    const load = async () => {
+      const dbConvs = await getConversations();
+      portfolioStore.setConversations(dbConvs);
+      
+      // Reconnect to last session if exists
+      const savedId = sessionStorage.getItem('chat-session-id');
+      if (savedId) setSessionConvId(savedId);
+    };
+    load();
+  }, []);
+
   // Hide on admin pages
   if (pathname?.startsWith('/admin')) return null;
 
   // Find active conversation
   const activeConv = conversations.find(c => c.id === sessionConvId);
 
-  const startConversation = (e: React.FormEvent) => {
+  const startConversation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!visitorName || !visitorEmail) return;
 
-    const newIdStr = `conv-${Math.floor(Math.random() * 1000000)}`;
-    const newConv: Conversation = {
-      id: newIdStr,
-      visitorName,
-      visitorEmail,
-      status: 'new',
-      lastUpdate: new Date().toISOString(),
-      messages: [
-        {
-          id: `msg-bot-${Math.floor(Math.random() * 1000000)}`,
-          sender: 'bot',
-          text: `Hi ${visitorName}! Thanks for reaching out. What can I help you with today?`,
-          timestamp: new Date().toISOString()
-        }
-      ]
+    const initialMsg: ChatMessage = {
+      id: `msg-bot-${Math.floor(Math.random() * 1000000)}`,
+      sender: 'bot',
+      text: `Hi ${visitorName}! Thanks for reaching out. What can I help you with today?`,
+      timestamp: new Date().toISOString()
     };
 
-    portfolioStore.updateConversations([...conversations, newConv]);
-    setSessionConvId(newIdStr);
+    const result = await apiStartConversation(visitorName, visitorEmail, initialMsg);
+    
+    if (result.success && result.conversation) {
+      const dbConv = result.conversation;
+      portfolioStore.setConversations([...conversations, dbConv]);
+      setSessionConvId(dbConv._id || dbConv.id);
+      sessionStorage.setItem('chat-session-id', dbConv._id || dbConv.id);
+    }
   };
 
-  const sendMessage = (e: React.FormEvent) => {
+  const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!composeText.trim() || !activeConv) return;
 
-    const newId = `msg-${Math.floor(Math.random() * 1000000)}`;
     const newMsg: ChatMessage = {
-      id: newId,
+      id: `msg-${Math.floor(Math.random() * 1000000)}`,
       sender: 'visitor',
       text: composeText.trim(),
       timestamp: new Date().toISOString()
     };
 
-    const updatedConv = {
+    // Optimistic update
+    const optimisticConv = {
       ...activeConv,
       messages: [...activeConv.messages, newMsg],
       lastUpdate: new Date().toISOString(),
       status: 'new' as const
     };
-
-    const newConvs = conversations.map(c => c.id === activeConv.id ? updatedConv : c);
-    portfolioStore.updateConversations(newConvs);
+    portfolioStore.setConversations(conversations.map(c => c.id === activeConv.id || c._id === activeConv._id ? optimisticConv : c));
     setComposeText('');
+
+    const result = await apiSaveMessage(activeConv._id || activeConv.id, newMsg);
+    if (!result.success) {
+      alert("Failed to send message. Please try again.");
+      // Rollback could be implemented here
+    }
   };
 
   return (

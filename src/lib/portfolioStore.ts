@@ -34,6 +34,7 @@ export interface ChatMessage {
 
 export interface Conversation {
   id: string;
+  _id?: string;
   visitorName: string;
   visitorEmail: string;
   status: 'new' | 'read' | 'replied';
@@ -139,6 +140,12 @@ export const portfolioStore = {
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
+    listeners.forEach(l => l());
+  },
+
+  setConversations(newConversations: Conversation[]) {
+    data = { ...data, conversations: newConversations };
+    // We don't save to localStorage here because DB is the source of truth for chat
     listeners.forEach(l => l());
   }
 };
