@@ -45,13 +45,19 @@ export default function ChatWidget() {
     load();
     
     // Pusher Real-time subscription
+    console.log("Initializing Pusher with key:", process.env.NEXT_PUBLIC_PUSHER_KEY);
     const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
       cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
     });
 
     const channel = pusher.subscribe('portfolio-chat');
+    
+    pusher.connection.bind('state_change', (states: any) => {
+      console.log("Pusher connection state:", states.current);
+    });
+
     channel.bind('new-message', () => {
-      // Re-fetch conversations when a new message event arrives
+      console.log("Pusher event received: new-message");
       load();
     });
 

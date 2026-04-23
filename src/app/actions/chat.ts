@@ -29,9 +29,14 @@ export async function saveMessage(conversationId: string, message: ChatMessage) 
     );
 
     // Trigger Pusher event
-    await pusherServer.trigger('portfolio-chat', 'new-message', {
-      conversationId: conversationId
-    });
+    try {
+      await pusherServer.trigger('portfolio-chat', 'new-message', {
+        conversationId: conversationId
+      });
+      console.log('Pusher event triggered for', conversationId);
+    } catch (pusherError) {
+      console.error('Pusher trigger failed:', pusherError);
+    }
 
     return { success: true, conversation: JSON.parse(JSON.stringify(updated)) };
   } catch (error) {
