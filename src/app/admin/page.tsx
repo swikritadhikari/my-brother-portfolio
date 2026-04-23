@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { portfolioStore, SiteSettings } from "@/lib/portfolioStore";
 import { fetchChannelVideos } from "@/app/actions/youtube";
+import { verifyAdminPassword } from "@/app/actions/auth";
 
 /*  Small Design Tokens  */
 const INPUT_CLS = "admin-input";
@@ -343,14 +344,43 @@ export default function AdminPage() {
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleImageUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    callback: (base64: string) => void,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check size (max 2MB for Base64 efficiency)
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Image too large. Please upload an image under 2MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      callback(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "admin123") {
-      setIsAuthenticated(true);
-      sessionStorage.setItem("admin-auth", "true");
-    } else {
-      alert("Incorrect password.");
+    setIsLoggingIn(true);
+    try {
+      const result = await verifyAdminPassword(password);
+      if (result.success) {
+        setIsAuthenticated(true);
+        sessionStorage.setItem("admin-auth", "true");
+      } else {
+        alert(result.error);
+      }
+    } catch {
+      alert("Verification failed. Please check your connection.");
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -523,7 +553,15 @@ export default function AdminPage() {
                   gap: "0.6rem",
                 }}
               >
-                <LogIn size={16} /> Unlock Dashboard
+                {isLoggingIn ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" /> Verifying...
+                  </>
+                ) : (
+                  <>
+                    <LogIn size={16} /> Unlock Dashboard
+                  </>
+                )}
               </span>
             </motion.button>
           </form>
@@ -1043,6 +1081,43 @@ export default function AdminPage() {
                         }
                       />
                     </div>
+                    <div>
+                      <label className={LABEL_CLS}>Thumbnail (Upload Image or URL)</label>
+                      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                         <input
+                           type="file"
+                           accept="image/*"
+                           onChange={(e) => handleImageUpload(e, (b) => setNewVideo({ ...newVideo, thumbnail: b }))}
+                           style={{ display: "none" }}
+                           id="upload-thumb"
+                         />
+                         <label 
+                           htmlFor="upload-thumb" 
+                           className="btn-luxury" 
+                           style={{ 
+                             padding: "0.6rem 1.5rem", 
+                             fontSize: "0.75rem", 
+                             background: "white", 
+                             color: "black",
+                             cursor: "pointer",
+                             borderRadius: "100px",
+                             fontWeight: 800
+                           }}
+                         >
+                           CHOOSE THUMBNAIL
+                         </label>
+                         {newVideo.thumbnail && (
+                           <div style={{ width: "60px", height: "34px", borderRadius: "4px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
+                             <img src={newVideo.thumbnail} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                           </div>
+                         )}
+                      </div>
+                      {newVideo.thumbnail && (
+                        <div style={{ marginTop: "1rem", borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", aspectRatio: "16/9" }}>
+                           <img src={newVideo.thumbnail} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        </div>
+                      )}
+                    </div>
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.97 }}
@@ -1242,10 +1317,6 @@ export default function AdminPage() {
                   >
                     {[
                       { key: "siteName", label: "Global Brand Name" },
-                      {
-                        key: "faviconUrl",
-                        label: "Favicon Image URL (.ico or .png)",
-                      },
                       { key: "heroTagline", label: "Top Tagline" },
                       { key: "heroLine1", label: "Heading Line 1 (Gradient)" },
                       { key: "heroLine2", label: "Heading Line 2" },
@@ -1359,20 +1430,60 @@ export default function AdminPage() {
                       />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>
-                        About Background Image URL
-                      </label>
-                      <input
-                        className={INPUT_CLS}
-                        placeholder="https://images.unsplash.com/..."
-                        value={editSettings.aboutBgImage || ""}
-                        onChange={(e) =>
-                          setEditSettings({
-                            ...editSettings,
-                            aboutBgImage: e.target.value,
-                          })
-                        }
-                      />
+                      <label className={LABEL_CLS}>Professional Profile Picture (Avatar)</label>
+                      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                         <input
+                           type="file"
+                           accept="image/*"
+                           onChange={(e) => handleImageUpload(e, (b) => setEditSettings({ ...editSettings, avatarUrl: b }))}
+                           style={{ display: "none" }}
+                           id="upload-avatar"
+                         />
+                         <label htmlFor="upload-avatar" className="btn-luxury" style={{ padding: "0.6rem 1rem", fontSize: "0.7rem", background: "rgba(255,255,255,0.05)", cursor: "pointer", borderRadius: "100px", border: "1px solid rgba(255,255,255,0.1)" }}>UPLOAD PHOTO</label>
+                         {editSettings.avatarUrl && (
+                           <div style={{ width: "40px", height: "40px", borderRadius: "50%", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
+                             <img src={editSettings.avatarUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                           </div>
+                         )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className={LABEL_CLS}>About Background Image</label>
+                      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                         <input
+                           type="file"
+                           accept="image/*"
+                           onChange={(e) => handleImageUpload(e, (b) => setEditSettings({ ...editSettings, aboutBgImage: b }))}
+                           style={{ display: "none" }}
+                           id="upload-about-bg"
+                         />
+                         <label htmlFor="upload-about-bg" className="btn-luxury" style={{ padding: "0.6rem 1rem", fontSize: "0.7rem", background: "rgba(255,255,255,0.05)", cursor: "pointer", borderRadius: "100px", border: "1px solid rgba(255,255,255,0.1)" }}>UPLOAD BACKGROUND</label>
+                         {editSettings.aboutBgImage && (
+                           <div style={{ width: "60px", height: "34px", borderRadius: "4px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
+                             <img src={editSettings.aboutBgImage} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                           </div>
+                         )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className={LABEL_CLS}>Site Favicon (Tab Icon)</label>
+                      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                         <input
+                           type="file"
+                           accept="image/*"
+                           onChange={(e) => handleImageUpload(e, (b) => setEditSettings({ ...editSettings, faviconUrl: b }))}
+                           style={{ display: "none" }}
+                           id="upload-favicon"
+                         />
+                         <label htmlFor="upload-favicon" className="btn-luxury" style={{ padding: "0.6rem 1rem", fontSize: "0.7rem", background: "rgba(255,255,255,0.05)", cursor: "pointer", borderRadius: "100px", border: "1px solid rgba(255,255,255,0.1)" }}>UPLOAD ICON</label>
+                         {editSettings.faviconUrl && (
+                           <div style={{ width: "32px", height: "32px", borderRadius: "4px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
+                             <img src={editSettings.faviconUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                           </div>
+                         )}
+                      </div>
                     </div>
 
                     {/* Social Media */}

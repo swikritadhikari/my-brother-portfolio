@@ -189,7 +189,7 @@ export default function Hero() {
               {/* Story Header */}
               <div style={{ position: 'absolute', top: '40px', left: '15px', right: '15px', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 10 }}>
                 <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid var(--accent)', padding: '2px', overflow: 'hidden' }}>
-                  <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                  <img src={settings.avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <span style={{ color: 'white', fontWeight: 800, fontSize: '13px', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{settings.siteName}</span>

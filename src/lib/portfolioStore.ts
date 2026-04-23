@@ -22,6 +22,7 @@ export interface SiteSettings {
   faviconUrl: string;
   preloaderText: string;
   preloaderSubtext: string;
+  avatarUrl: string;
 }
 
 export interface ChatMessage {
@@ -59,7 +60,8 @@ const defaultSettings: SiteSettings = {
   copyrightText: '© 2026 All rights reserved. Made by Sulabh (aka Swikrit)',
   faviconUrl: '/favicon.ico',
   preloaderText: 'BINAYA CINEMATICS',
-  preloaderSubtext: 'INITIALIZING CREATIVE FLOW'
+  preloaderSubtext: 'INITIALIZING CREATIVE FLOW',
+  avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80'
 };
 
 interface PortfolioData {
