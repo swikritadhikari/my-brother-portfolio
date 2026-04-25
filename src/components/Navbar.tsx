@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { useSyncExternalStore, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 import { portfolioStore } from '@/lib/portfolioStore';
 
 export default function Navbar() {
@@ -22,15 +22,15 @@ export default function Navbar() {
     >
       <div className="container">
         <div className="glass-nav">
-          <Link href="/" style={{ fontSize: '1.5rem', fontWeight: '900', letterSpacing: '-0.05em' }}>
+          <Link href="/" style={{ fontSize: 'clamp(1.1rem, 4vw, 1.5rem)', fontWeight: '900', letterSpacing: '-0.05em', whiteSpace: 'nowrap' }}>
             {settings.siteName}<span style={{ color: 'var(--accent)' }}>.</span>
           </Link>
           
-          <div className="nav-links">
-            <button onClick={() => document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' })} className="hover-accent" style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Work</button>
-            <button onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })} className="hover-accent" style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em' }}>About</button>
-            <button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="hover-accent" style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Contact</button>
-            <Link href="/admin" style={{ opacity: 0.3, fontSize: '0.7rem' }}>Admin</Link>
+          <div className="nav-links" style={{ display: 'flex', alignItems: 'center' }}>
+            <button onClick={() => document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' })} className="hover-accent" style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontWeight: '700', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Work</button>
+            <button onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })} className="hover-accent" style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontWeight: '700', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>About</button>
+            <button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="hover-accent" style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontWeight: '700', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Contact</button>
+            <Link href="/admin" style={{ opacity: 0.3, fontSize: '0.65rem', marginLeft: '0.5rem' }}>Admin</Link>
           </div>
         </div>
       </div>

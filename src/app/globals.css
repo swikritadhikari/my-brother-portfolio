@@ -110,6 +110,7 @@ h3 {
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  transition: padding 0.3s ease;
 }
 
 .nav-links {
@@ -337,42 +338,67 @@ h3 {
 /* RESPONSIVE DESIGN */
 @media (max-width: 1024px) {
   .grid-portfolio {
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 3rem 1.5rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3rem 2rem;
+  }
+  .section-padding {
+    padding: 8rem 0;
   }
 }
 
 @media (max-width: 768px) {
+  .container {
+    width: 90%;
+  }
   .glass-nav {
-    padding: 1rem 1.5rem;
+    padding: 0.8rem 1.5rem;
   }
   .nav-links {
-    display: none; /* Hide desktop nav on mobile */
+    gap: 1.5rem;
   }
   .hero-section {
-    padding: 15vh 0 10vh;
+    padding: 12vh 0 8vh;
   }
   .text-hero {
-    font-size: 3.5rem;
-    line-height: 0.9;
+    font-size: clamp(3rem, 12vw, 5rem);
+    line-height: 1;
   }
   .grid-portfolio {
     grid-template-columns: 1fr;
-    gap: 2.5rem;
+    gap: 3rem;
   }
   .section-padding {
     padding: 6rem 0;
   }
   .footer-reveal h2 {
-    font-size: 3rem !important;
+    font-size: clamp(2.5rem, 10vw, 4rem) !important;
+  }
+  .flex-between {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2rem;
   }
 }
 
 @media (max-width: 480px) {
   .text-hero {
-    font-size: 2.8rem;
+    font-size: 2.5rem;
+    letter-spacing: -0.02em;
   }
   .hero-section p {
     font-size: 1.1rem !important;
+    line-height: 1.5;
+  }
+  .btn-luxury {
+    padding: 1.2rem 2rem;
+    width: 100%;
+    text-align: center;
+  }
+  .flex.center {
+    flex-direction: column;
+    width: 100%;
+  }
+  .magnetic-btn {
+    width: 100%;
   }
 }

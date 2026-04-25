@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useSyncExternalStore } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
+import Image from "next/image";
 import Pusher from "pusher-js";
 import { Video } from "@/data/videos";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,14 +26,143 @@ import {
   Send,
   X,
 } from "lucide-react";
-import { portfolioStore, SiteSettings, ChatMessage } from "@/lib/portfolioStore";
+import {
+  portfolioStore,
+  SiteSettings,
+  ChatMessage,
+} from "@/lib/portfolioStore";
 import { fetchChannelVideos } from "@/app/actions/youtube";
 import { verifyAdminPassword } from "@/app/actions/auth";
-import { getConversations, saveMessage as apiSaveMessage, deleteConversation as apiDeleteConversation } from "@/app/actions/chat";
+import {
+  getConversations,
+  saveMessage as apiSaveMessage,
+  deleteConversation as apiDeleteConversation,
+} from "@/app/actions/chat";
 
 /*  Small Design Tokens  */
 const INPUT_CLS = "admin-input";
 const LABEL_CLS = "admin-label";
+
+const ADMIN_CSS = `
+  .admin-shell {
+    display: flex;
+    min-height: 100vh;
+    background: #050505;
+    flex-direction: row;
+  }
+
+  .admin-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    padding: 2.5rem 1.5rem;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    z-index: 100;
+    background: #050505;
+  }
+
+  .admin-main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 3rem;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 3rem;
+  }
+
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+  }
+
+  .nav-label { display: block; }
+  .nav-icon-only { display: none; }
+
+  @media (max-width: 1024px) {
+    .stat-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .admin-shell {
+      flex-direction: column;
+    }
+
+    .action-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .tab-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .admin-sidebar {
+      width: 100%;
+      height: auto;
+      position: fixed;
+      bottom: 0;
+      top: auto;
+      flex-direction: row;
+      justify-content: space-around;
+      padding: 0.75rem;
+      border-right: none;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      background: rgba(5,5,5,0.8);
+      backdrop-filter: blur(20px);
+      gap: 0;
+    }
+
+    .admin-sidebar > div:first-child, 
+    .admin-sidebar > div:last-child {
+      display: none;
+    }
+
+    .admin-main {
+      padding: 1.5rem;
+      padding-bottom: 80px;
+    }
+
+    .stat-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .nav-label { display: none; }
+    .nav-icon-only { display: block; }
+    
+    .admin-nav-item {
+      padding: 0.75rem !important;
+      justify-content: center !important;
+      width: auto !important;
+      flex: 1;
+    }
+
+    .admin-title {
+      font-size: 1.75rem !important;
+    }
+  }
+`;
 
 /*  Sidebar NavItem  */
 function NavItem({
@@ -49,6 +179,7 @@ function NavItem({
   return (
     <button
       onClick={onClick}
+      className="admin-nav-item"
       style={{
         width: "100%",
         display: "flex",
@@ -79,8 +210,8 @@ function NavItem({
       }}
     >
       <Icon size={18} />
-      <span>{label}</span>
-      {active && <ChevronRight size={16} style={{ marginLeft: "auto" }} />}
+      <span className="nav-label">{label}</span>
+      {active && <ChevronRight size={16} className="nav-label" style={{ marginLeft: "auto" }} />}
     </button>
   );
 }
@@ -179,11 +310,15 @@ function VideoRow({
           background: "#111",
         }}
       >
-        <img
-          src={video.thumbnail}
-          alt={video.title}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        />
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+          <Image
+            src={video.thumbnail}
+            alt={video.title}
+            fill
+            style={{ objectFit: "cover" }}
+            unoptimized
+          />
+        </div>
       </div>
       <div style={{ flexGrow: 1, minWidth: 0 }}>
         <p
@@ -314,17 +449,21 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
-    if (sessionStorage.getItem("admin-auth") === "true") {
-      setIsAuthenticated(true);
-    }
-    
+    // Break the synchronous render cycle
+    const checkAuth = () => {
+      setIsMounted(true);
+      if (sessionStorage.getItem("admin-auth") === "true") {
+        setIsAuthenticated(true);
+      }
+    };
+    checkAuth();
+
     // Initial load of conversations from DB
     const load = async () => {
       const dbConvs = await getConversations();
       portfolioStore.setConversations(dbConvs);
     };
-    
+
     load();
 
     // Pusher Real-time subscription
@@ -332,14 +471,14 @@ export default function AdminPage() {
       cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
     });
 
-    const channel = pusher.subscribe('portfolio-chat');
-    channel.bind('new-message', () => {
+    const channel = pusher.subscribe("portfolio-chat");
+    channel.bind("new-message", () => {
       // Re-fetch conversations when a new message event arrives
       load();
     });
 
     return () => {
-      pusher.unsubscribe('portfolio-chat');
+      pusher.unsubscribe("portfolio-chat");
     };
   }, []);
 
@@ -607,22 +746,10 @@ export default function AdminPage() {
 
   /*  Dashboard  */
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#050505" }}>
+    <div className="admin-shell">
+      <style dangerouslySetInnerHTML={{ __html: ADMIN_CSS }} />
       {/* Sidebar */}
-      <aside
-        style={{
-          width: "280px",
-          flexShrink: 0,
-          padding: "2.5rem 1.5rem",
-          borderRight: "1px solid rgba(255,255,255,0.06)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.5rem",
-          position: "sticky",
-          top: 0,
-          height: "100vh",
-        }}
-      >
+      <aside className="admin-sidebar">
         <div style={{ marginBottom: "3rem", paddingLeft: "1rem" }}>
           <p
             style={{
@@ -720,7 +847,7 @@ export default function AdminPage() {
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, overflowY: "auto", padding: "3rem" }}>
+      <main className="admin-main">
         <AnimatePresence mode="wait">
           {/*  OVERVIEW TAB  */}
           {activeTab === "overview" && (
@@ -732,6 +859,7 @@ export default function AdminPage() {
               transition={{ duration: 0.4 }}
             >
               <h1
+                className="admin-title"
                 style={{
                   fontFamily: "Syne, sans-serif",
                   fontSize: "2.5rem",
@@ -748,14 +876,7 @@ export default function AdminPage() {
                 Here&apos;s what&apos;s happening with your portfolio.
               </p>
 
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: "1.25rem",
-                  marginBottom: "3rem",
-                }}
-              >
+              <div className="stat-grid">
                 <StatCard
                   label="Total Videos"
                   value={videos.length}
@@ -768,7 +889,7 @@ export default function AdminPage() {
                 />
                 <StatCard
                   label="Unread Messages"
-                  value={conversations.filter(c => c.status === 'new').length}
+                  value={conversations.filter((c) => c.status === "new").length}
                   icon={MessageSquare}
                 />
                 <StatCard
@@ -791,13 +912,7 @@ export default function AdminPage() {
               >
                 Quick Actions
               </h2>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "1rem",
-                }}
-              >
+              <div className="action-grid">
                 {[
                   {
                     label: "Manage Videos",
@@ -869,16 +984,10 @@ export default function AdminPage() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  marginBottom: "2.5rem",
-                }}
-              >
+              <div className="tab-header">
                 <div>
                   <h1
+                    className="admin-title"
                     style={{
                       fontFamily: "Syne, sans-serif",
                       fontSize: "1.75rem",
@@ -1001,14 +1110,13 @@ export default function AdminPage() {
                           )
                         }
                         onToggleType={() => {
-                          const updated = videos.map((v) =>
+                          const updated: Video[] = videos.map((v) =>
                             v.id === video.id
                               ? {
                                   ...v,
-                                  type:
-                                    v.type === "short"
-                                      ? "video"
-                                      : ("short" as any),
+                                  type: (v.type === "short"
+                                    ? "video"
+                                    : "short") as "video" | "short",
                                 }
                               : v,
                           );
@@ -1098,53 +1206,126 @@ export default function AdminPage() {
                       </select>
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>YouTube Video ID</label>
+                      <label className={LABEL_CLS}>YouTube Link or ID</label>
                       <input
                         className={INPUT_CLS}
-                        placeholder="dQw4w9WgXcQ"
+                        placeholder="Paste URL or ID (e.g. dQw4w9WgXcQ)"
                         value={newVideo.youtubeId}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const id =
+                            val.split("v=")[1]?.split("&")[0] ||
+                            val.split("/").pop()?.split("?")[0] ||
+                            val;
                           setNewVideo({
                             ...newVideo,
-                            youtubeId: e.target.value,
-                          })
-                        }
+                            youtubeId: id,
+                          });
+                        }}
                       />
                     </div>
+                    {newVideo.youtubeId && (
+                      <div
+                        style={{
+                          marginTop: "1rem",
+                          borderRadius: "12px",
+                          overflow: "hidden",
+                          border: "1px solid rgba(255,255,255,0.1)",
+                          aspectRatio: "16/9",
+                          background: "#000",
+                        }}
+                      >
+                        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                          <Image
+                            src={`https://img.youtube.com/vi/${newVideo.youtubeId}/maxresdefault.jpg`}
+                            alt="Video Preview"
+                            fill
+                            style={{
+                              objectFit: "cover",
+                            }}
+                            unoptimized
+                          />
+                        </div>
+                      </div>
+                    )}
                     <div>
-                      <label className={LABEL_CLS}>Thumbnail (Upload Image or URL)</label>
-                      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                         <input
-                           type="file"
-                           accept="image/*"
-                           onChange={(e) => handleImageUpload(e, (b) => setNewVideo({ ...newVideo, thumbnail: b }))}
-                           style={{ display: "none" }}
-                           id="upload-thumb"
-                         />
-                         <label 
-                           htmlFor="upload-thumb" 
-                           className="btn-luxury" 
-                           style={{ 
-                             padding: "0.6rem 1.5rem", 
-                             fontSize: "0.75rem", 
-                             background: "white", 
-                             color: "black",
-                             cursor: "pointer",
-                             borderRadius: "100px",
-                             fontWeight: 800
-                           }}
-                         >
-                           CHOOSE THUMBNAIL
-                         </label>
-                         {newVideo.thumbnail && (
-                           <div style={{ width: "60px", height: "34px", borderRadius: "4px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
-                             <img src={newVideo.thumbnail} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                           </div>
-                         )}
+                      <label className={LABEL_CLS}>
+                        Thumbnail (Upload Image or URL)
+                      </label>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "1rem",
+                          alignItems: "center",
+                        }}
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) =>
+                            handleImageUpload(e, (b) =>
+                              setNewVideo({ ...newVideo, thumbnail: b }),
+                            )
+                          }
+                          style={{ display: "none" }}
+                          id="upload-thumb"
+                        />
+                        <label
+                          htmlFor="upload-thumb"
+                          className="btn-luxury"
+                          style={{
+                            padding: "0.6rem 1.5rem",
+                            fontSize: "0.75rem",
+                            background: "white",
+                            color: "black",
+                            cursor: "pointer",
+                            borderRadius: "100px",
+                            fontWeight: 800,
+                          }}
+                        >
+                          CHOOSE THUMBNAIL
+                        </label>
+                        {newVideo.thumbnail && (
+                          <div
+                            style={{
+                              width: "60px",
+                              height: "34px",
+                              borderRadius: "4px",
+                              overflow: "hidden",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
+                          >
+                            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                              <Image
+                                src={newVideo.thumbnail}
+                                alt="Small Preview"
+                                fill
+                                style={{ objectFit: "cover" }}
+                                unoptimized
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                       {newVideo.thumbnail && (
-                        <div style={{ marginTop: "1rem", borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", aspectRatio: "16/9" }}>
-                           <img src={newVideo.thumbnail} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <div
+                          style={{
+                            marginTop: "1rem",
+                            borderRadius: "8px",
+                            overflow: "hidden",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                            aspectRatio: "16/9",
+                          }}
+                        >
+                          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                            <Image
+                              src={newVideo.thumbnail}
+                              alt="Large Preview"
+                              fill
+                              style={{ objectFit: "cover" }}
+                              unoptimized
+                            />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1212,13 +1393,18 @@ export default function AdminPage() {
                         />
                         <p
                           style={{
-                            fontSize: "0.6rem",
-                            color: "rgba(255,255,255,0.3)",
+                            fontSize: "0.65rem",
+                            color: "rgba(255,255,255,0.4)",
                             marginTop: "0.5rem",
+                            lineHeight: 1.4,
                           }}
                         >
-                          Imports the latest 15 videos automatically directly
-                          from YouTube RSS.
+                          Paste the <strong>Channel ID</strong> (e.g., starts
+                          with UC...). <br />
+                          <em>
+                            Tip: You can find this in your YouTube Settings &gt;
+                            Advanced.
+                          </em>
                         </p>
                       </div>
                       <motion.button
@@ -1368,8 +1554,8 @@ export default function AdminPage() {
                     ))}
                     <div>
                       <label className={LABEL_CLS}>
-                        Hero &quot;Watch Showreel&quot; YouTube IDs (Comma-separated for
-                        multiple!)
+                        Hero &quot;Watch Showreel&quot; YouTube IDs
+                        (Comma-separated for multiple!)
                       </label>
                       <input
                         className={INPUT_CLS}
@@ -1460,59 +1646,191 @@ export default function AdminPage() {
                       />
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Professional Profile Picture (Avatar)</label>
-                      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                         <input
-                           type="file"
-                           accept="image/*"
-                           onChange={(e) => handleImageUpload(e, (b) => setEditSettings({ ...editSettings, avatarUrl: b }))}
-                           style={{ display: "none" }}
-                           id="upload-avatar"
-                         />
-                         <label htmlFor="upload-avatar" className="btn-luxury" style={{ padding: "0.6rem 1rem", fontSize: "0.7rem", background: "rgba(255,255,255,0.05)", cursor: "pointer", borderRadius: "100px", border: "1px solid rgba(255,255,255,0.1)" }}>UPLOAD PHOTO</label>
-                         {editSettings.avatarUrl && (
-                           <div style={{ width: "40px", height: "40px", borderRadius: "50%", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
-                             <img src={editSettings.avatarUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                           </div>
-                         )}
+                      <label className={LABEL_CLS}>
+                        Professional Profile Picture (Avatar)
+                      </label>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "1rem",
+                          alignItems: "center",
+                        }}
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) =>
+                            handleImageUpload(e, (b) =>
+                              setEditSettings({
+                                ...editSettings,
+                                avatarUrl: b,
+                              }),
+                            )
+                          }
+                          style={{ display: "none" }}
+                          id="upload-avatar"
+                        />
+                        <label
+                          htmlFor="upload-avatar"
+                          className="btn-luxury"
+                          style={{
+                            padding: "0.6rem 1rem",
+                            fontSize: "0.7rem",
+                            background: "rgba(255,255,255,0.05)",
+                            cursor: "pointer",
+                            borderRadius: "100px",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                          }}
+                        >
+                          UPLOAD PHOTO
+                        </label>
+                        {editSettings.avatarUrl && (
+                          <div
+                            style={{
+                              width: "40px",
+                              height: "40px",
+                              borderRadius: "50%",
+                              overflow: "hidden",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
+                          >
+                            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                              <Image
+                                src={editSettings.avatarUrl}
+                                alt="Avatar Preview"
+                                fill
+                                style={{ objectFit: "cover" }}
+                                unoptimized
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     <div>
-                      <label className={LABEL_CLS}>About Background Image</label>
-                      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                         <input
-                           type="file"
-                           accept="image/*"
-                           onChange={(e) => handleImageUpload(e, (b) => setEditSettings({ ...editSettings, aboutBgImage: b }))}
-                           style={{ display: "none" }}
-                           id="upload-about-bg"
-                         />
-                         <label htmlFor="upload-about-bg" className="btn-luxury" style={{ padding: "0.6rem 1rem", fontSize: "0.7rem", background: "rgba(255,255,255,0.05)", cursor: "pointer", borderRadius: "100px", border: "1px solid rgba(255,255,255,0.1)" }}>UPLOAD BACKGROUND</label>
-                         {editSettings.aboutBgImage && (
-                           <div style={{ width: "60px", height: "34px", borderRadius: "4px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
-                             <img src={editSettings.aboutBgImage} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                           </div>
-                         )}
+                      <label className={LABEL_CLS}>
+                        About Background Image
+                      </label>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "1rem",
+                          alignItems: "center",
+                        }}
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) =>
+                            handleImageUpload(e, (b) =>
+                              setEditSettings({
+                                ...editSettings,
+                                aboutBgImage: b,
+                              }),
+                            )
+                          }
+                          style={{ display: "none" }}
+                          id="upload-about-bg"
+                        />
+                        <label
+                          htmlFor="upload-about-bg"
+                          className="btn-luxury"
+                          style={{
+                            padding: "0.6rem 1rem",
+                            fontSize: "0.7rem",
+                            background: "rgba(255,255,255,0.05)",
+                            cursor: "pointer",
+                            borderRadius: "100px",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                          }}
+                        >
+                          UPLOAD BACKGROUND
+                        </label>
+                        {editSettings.aboutBgImage && (
+                          <div
+                            style={{
+                              width: "60px",
+                              height: "34px",
+                              borderRadius: "4px",
+                              overflow: "hidden",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
+                          >
+                            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                              <Image
+                                src={editSettings.aboutBgImage}
+                                alt="Background Preview"
+                                fill
+                                style={{ objectFit: "cover" }}
+                                unoptimized
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     <div>
-                      <label className={LABEL_CLS}>Site Favicon (Tab Icon)</label>
-                      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                         <input
-                           type="file"
-                           accept="image/*"
-                           onChange={(e) => handleImageUpload(e, (b) => setEditSettings({ ...editSettings, faviconUrl: b }))}
-                           style={{ display: "none" }}
-                           id="upload-favicon"
-                         />
-                         <label htmlFor="upload-favicon" className="btn-luxury" style={{ padding: "0.6rem 1rem", fontSize: "0.7rem", background: "rgba(255,255,255,0.05)", cursor: "pointer", borderRadius: "100px", border: "1px solid rgba(255,255,255,0.1)" }}>UPLOAD ICON</label>
-                         {editSettings.faviconUrl && (
-                           <div style={{ width: "32px", height: "32px", borderRadius: "4px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
-                             <img src={editSettings.faviconUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                           </div>
-                         )}
+                      <label className={LABEL_CLS}>
+                        Site Favicon (Tab Icon)
+                      </label>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "1rem",
+                          alignItems: "center",
+                        }}
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) =>
+                            handleImageUpload(e, (b) =>
+                              setEditSettings({
+                                ...editSettings,
+                                faviconUrl: b,
+                              }),
+                            )
+                          }
+                          style={{ display: "none" }}
+                          id="upload-favicon"
+                        />
+                        <label
+                          htmlFor="upload-favicon"
+                          className="btn-luxury"
+                          style={{
+                            padding: "0.6rem 1rem",
+                            fontSize: "0.7rem",
+                            background: "rgba(255,255,255,0.05)",
+                            cursor: "pointer",
+                            borderRadius: "100px",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                          }}
+                        >
+                          UPLOAD ICON
+                        </label>
+                        {editSettings.faviconUrl && (
+                          <div
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "4px",
+                              overflow: "hidden",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                            }}
+                          >
+                            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                              <Image
+                                src={editSettings.faviconUrl}
+                                alt="Favicon Preview"
+                                fill
+                                style={{ objectFit: "cover" }}
+                                unoptimized
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -1604,7 +1922,9 @@ export default function AdminPage() {
                         }}
                       >
                         <div>
-                          <label className={LABEL_CLS}>Brand Name (Characters animated)</label>
+                          <label className={LABEL_CLS}>
+                            Brand Name (Characters animated)
+                          </label>
                           <input
                             className={INPUT_CLS}
                             placeholder="BINAYA CINEMATICS"
@@ -1618,7 +1938,9 @@ export default function AdminPage() {
                           />
                         </div>
                         <div>
-                          <label className={LABEL_CLS}>Subtext (Initialization label)</label>
+                          <label className={LABEL_CLS}>
+                            Subtext (Initialization label)
+                          </label>
                           <input
                             className={INPUT_CLS}
                             placeholder="ESTABLISHING SHOT"
@@ -1913,11 +2235,15 @@ export default function AdminPage() {
                         </div>
                         <button
                           onClick={async () => {
-                            const result = await apiDeleteConversation(activeConv._id || activeConv.id);
+                            const result = await apiDeleteConversation(
+                              activeConv._id || activeConv.id,
+                            );
                             if (result.success) {
                               portfolioStore.setConversations(
                                 conversations.filter(
-                                  (c) => (c._id || c.id) !== (activeConv._id || activeConv.id),
+                                  (c) =>
+                                    (c._id || c.id) !==
+                                    (activeConv._id || activeConv.id),
                                 ),
                               );
                               setSelectedConvId(null);
@@ -2038,12 +2364,18 @@ export default function AdminPage() {
 
                           portfolioStore.setConversations(
                             conversations.map((c) =>
-                              (c._id || c.id) === (activeConv._id || activeConv.id) ? updatedConv : c,
+                              (c._id || c.id) ===
+                              (activeConv._id || activeConv.id)
+                                ? updatedConv
+                                : c,
                             ),
                           );
                           setReplyText("");
 
-                          const result = await apiSaveMessage(activeConv._id || activeConv.id, newMsg);
+                          const result = await apiSaveMessage(
+                            activeConv._id || activeConv.id,
+                            newMsg,
+                          );
                           if (!result.success) {
                             alert("Failed to send reply. Please try again.");
                           }

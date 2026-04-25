@@ -160,7 +160,18 @@ export default function Hero() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              style={{ position: 'relative', width: '100%', maxWidth: '420px', height: '100%', maxHeight: '850px', background: '#000', borderRadius: '1.5rem', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.8)' }}
+              className="story-container"
+              style={{ 
+                position: 'relative', 
+                width: '100%', 
+                maxWidth: '420px', 
+                height: '100%', 
+                maxHeight: 'min(850px, 100dvh)', 
+                background: '#000', 
+                borderRadius: 'min(1.5rem, 5vw)', 
+                overflow: 'hidden', 
+                boxShadow: '0 40px 100px rgba(0,0,0,0.8)' 
+              }}
               onClick={e => e.stopPropagation()}
               onPointerDown={() => setIsPaused(true)}
               onPointerUp={() => setIsPaused(false)}

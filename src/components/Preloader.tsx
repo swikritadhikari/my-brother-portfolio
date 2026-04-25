@@ -112,13 +112,13 @@ export default function Preloader() {
               </div>
               
               {/* PROGRESS SECTION */}
-              <div style={{ position: 'relative', width: '300px', margin: '0 auto' }}>
+              <div style={{ position: 'relative', width: 'min(90vw, 400px)', margin: '0 auto' }}>
                 <div style={{ 
                   display: 'flex', 
                   justifyContent: 'space-between', 
                   alignItems: 'center', 
                   fontFamily: 'Inter', 
-                  fontSize: '10px', 
+                  fontSize: 'clamp(8px, 2vw, 10px)', 
                   letterSpacing: '0.3em',
                   marginBottom: '10px',
                   color: 'var(--accent)'
