@@ -521,9 +521,20 @@ export default function AdminPage() {
     });
 
     const channel = pusher.subscribe("portfolio-chat");
-    channel.bind("new-message", () => {
+    channel.bind("new-message", (data: any) => {
       // Re-fetch conversations when a new message event arrives
       load();
+      
+      // Play sound if message is from a visitor
+      if (data.sender === 'visitor') {
+        try {
+          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+          audio.volume = 0.5;
+          audio.play();
+        } catch (err) {
+          console.log("Audio play blocked", err);
+        }
+      }
     });
 
     return () => {

@@ -32,7 +32,8 @@ export async function saveMessage(conversationId: string, message: ChatMessage) 
     try {
       await pusherServer.trigger('portfolio-chat', 'new-message', {
         conversationId: conversationId,
-        text: message.text
+        text: message.text,
+        sender: message.sender
       });
       console.log('Pusher event triggered for', conversationId);
     } catch (pusherError) {
@@ -60,7 +61,8 @@ export async function startConversation(visitorName: string, visitorEmail: strin
     // Trigger Pusher event
     await pusherServer.trigger('portfolio-chat', 'new-message', {
       conversationId: newConv._id,
-      text: initialMessage.text
+      text: initialMessage.text,
+      sender: initialMessage.sender
     });
 
     return { success: true, conversation: JSON.parse(JSON.stringify(newConv)) };

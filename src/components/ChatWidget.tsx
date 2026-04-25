@@ -71,13 +71,24 @@ export default function ChatWidget() {
     channel.bind("new-message", (data: any) => {
       console.log("Pusher event received: new-message", data);
       load();
-      // If chat is closed, increment unread count and show peek
-      if (!isOpen) {
+      
+      // Only notify if message is from the admin/bot and chat is closed
+      if (!isOpen && data.sender === 'bot') {
         setUnreadCount(prev => prev + 1);
+        
+        // Play notification sound
+        try {
+          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+          audio.volume = 0.5;
+          audio.play();
+        } catch (err) {
+          console.log("Audio play blocked by browser", err);
+        }
+
         if (data.text) {
           setLastMessagePeek(data.text);
           setShowPeek(true);
-          setTimeout(() => setShowPeek(false), 5000); // Hide peek after 5s
+          setTimeout(() => setShowPeek(false), 5000);
         }
       }
     });
