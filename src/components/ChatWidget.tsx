@@ -25,6 +25,8 @@ export default function ChatWidget() {
   const [sessionConvId, setSessionConvId] = useState<string | null>(null);
 
   // Form states for new leads
+  const [visitorName, setVisitorName] = useState("");
+  const [visitorEmail, setVisitorEmail] = useState("");
   const [composeText, setComposeText] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
   const [showPeek, setShowPeek] = useState(false);
