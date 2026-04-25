@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useEffect, useRef, useSyncExternalStore } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Play, ArrowRight, Loader2 } from "lucide-react";
-import { portfolioStore } from "@/lib/portfolioStore";
+import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Play, X, Loader2, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useSyncExternalStore } from 'react';
+import { portfolioStore } from '@/lib/portfolioStore';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function VideoGrid() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  
   const { videos } = useSyncExternalStore(
     portfolioStore.subscribe,
     portfolioStore.getSnapshot,
@@ -19,19 +19,55 @@ export default function VideoGrid() {
   );
 
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
+  const [iframeLoading, setIframeLoading] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(6);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const mainVlogs = videos.filter(v => v.type === 'video' || v.type === undefined);
+  const mainVideos = mainVlogs.slice(0, visibleCount);
 
   useEffect(() => {
-    // Parallax Reveal on Scroll
+    if (!containerRef.current || mainVideos.length === 0) return;
+
     const ctx = gsap.context(() => {
       const cards = gsap.utils.toArray('.video-card');
       cards.forEach((card) => {
         const el = card as HTMLElement;
+        
+        // 3D Tilt Effect
+        el.addEventListener('mousemove', (e) => {
+          const rect = el.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          const rotateX = (y - centerY) / 10;
+          const rotateY = (centerX - x) / 10;
+
+          gsap.to(el, {
+            rotateX: rotateX,
+            rotateY: rotateY,
+            scale: 1.02,
+            duration: 0.5,
+            ease: 'power3.out',
+            transformPerspective: 1000
+          });
+        });
+
+        el.addEventListener('mouseleave', () => {
+          gsap.to(el, {
+            rotateX: 0,
+            rotateY: 0,
+            scale: 1,
+            duration: 0.5,
+            ease: 'power3.out'
+          });
+        });
+
+        // Entrance Animation
         gsap.from(el, {
           y: 100,
           opacity: 0,
-          rotateX: -10,
           scrollTrigger: {
             trigger: el,
             start: 'top bottom-=100px',
@@ -42,46 +78,38 @@ export default function VideoGrid() {
     }, containerRef);
 
     return () => ctx.revert();
-  }, [videos, visibleCount]); // Re-run if videos list or visible count changes
-
-  const [iframeLoading, setIframeLoading] = useState<string | null>(null);
-
-  const mainVlogs = videos.filter(v => v.type === 'video' || v.type === undefined);
-  const mainVideos = mainVlogs.slice(0, visibleCount);
+  }, [mainVideos.length]);
 
   return (
-    <section id="work" ref={containerRef} className="section-padding" style={{ backgroundColor: '#000' }}>
+    <section id="work" className="section" ref={containerRef}>
       <div className="container">
-        <div className="flex-between" style={{ marginBottom: '6rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '3rem' }}>
-          <div style={{ maxWidth: '600px' }}>
-            <h2 className="text-section" style={{ fontWeight: '800' }}>Selected Works</h2>
-            <p style={{ color: 'var(--text-dim)', fontSize: '1.2rem', marginTop: '1rem' }}>
-              Redefining commercial aesthetics through narrative precision and technical innovation.
-            </p>
+        <div className="flex between end" style={{ marginBottom: '5rem' }}>
+          <div className="fade-up">
+            <span className="text-accent" style={{ fontWeight: 800, letterSpacing: '0.3em', fontSize: '0.75rem', textTransform: 'uppercase' }}>Selected Works</span>
+            <h2 style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontFamily: 'var(--font-syne)', fontWeight: 800, marginTop: '1rem', letterSpacing: '-0.04em' }}>
+              CINEMATIC <br /> <span className="text-gradient">NARRATIVES</span>
+            </h2>
           </div>
-          <div className="flex" style={{ gap: '2rem' }}>
-             <span style={{ fontSize: '0.7rem', fontWeight: 'bold', letterSpacing: '0.2em' }}>SCROLL TO EXPLORE</span>
-             <div style={{ width: '100px', height: '1px', background: 'var(--glass-border)', alignSelf: 'center' }} />
+          <div className="desktop-only fade-up">
+            <p style={{ maxWidth: '300px', fontSize: '0.9rem', color: 'var(--text-dim)', lineHeight: 1.6 }}>
+              A collection of high-end visual stories tailored for emotional resonance and pace.
+            </p>
           </div>
         </div>
 
-        {mainVideos.length === 0 ? (
-          <div className="flex center column" style={{ padding: '10rem 0', opacity: 0.5 }}>
-            <p style={{ fontSize: '1.2rem', letterSpacing: '0.1em' }}>NO MAIN VIDEOS FOUND</p>
-            <span style={{ fontSize: '0.8rem', marginTop: '1rem' }}>Add some cinematic vlogs in the Admin panel.</span>
-          </div>
-        ) : (
-          <div className="grid-portfolio">
-            {mainVideos.map((video) => (
+        <div className="grid-portfolio">
+          {mainVideos.length > 0 ? (
+            mainVideos.map((video) => (
               <div 
                 key={video.id} 
-                className="video-card" 
+                className="video-card glass-card" 
+                style={{ overflow: 'visible' }}
                 onClick={() => {
                   setPlayingVideoId(video.id);
                   setIframeLoading(video.id);
                 }}
               >
-                <div className="video-card-thumb" style={{ borderRadius: '0', aspectRatio: '16/9', background: '#050505', position: 'relative' }}>
+                <div className="video-card-thumb" style={{ borderRadius: '1.5rem', aspectRatio: '16/9', background: '#050505', position: 'relative', overflow: 'hidden' }}>
                   {playingVideoId === video.id ? (
                     <>
                       {iframeLoading === video.id && (
@@ -100,58 +128,46 @@ export default function VideoGrid() {
                     </>
                   ) : (
                     <>
-                      <img 
+                      <Image 
                         src={video.thumbnail} 
                         alt={video.title} 
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)' }} 
+                        fill
+                        style={{ objectFit: 'cover' }} 
                         className="hover-scale"
+                        unoptimized
                       />
-                      <div className="play-button">
-                        <Play size={24} fill="white" />
+                      <div className="play-button-glass">
+                        <Play size={20} fill="white" />
                       </div>
                     </>
                   )}
                 </div>
-                <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '0 0.5rem' }}>
-                  <div>
-                    <h3 style={{ fontSize: '1.4rem', fontWeight: '800', lineHeight: 1.2, marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>{video.title}</h3>
-                    <span style={{ color: 'var(--accent)', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em' }}>{video.category}</span>
+                <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '0 1rem' }}>
+                  <div style={{ flex: 1, paddingRight: '1rem' }}>
+                    <h3 style={{ fontSize: '1.6rem', fontFamily: 'var(--font-syne)', fontWeight: '800', lineHeight: 1.1, marginBottom: '0.5rem', letterSpacing: '-0.04em' }}>{video.title}</h3>
+                    <span style={{ color: 'var(--accent)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.25em', opacity: 0.8 }}>{video.category}</span>
                   </div>
-                  <div style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '50%' }}>
+                  <div style={{ width: '45px', height: '45px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
                     <ArrowRight size={20} className="text-accent" />
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-
-
+            ))
+          ) : (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '10rem 0', opacity: 0.4 }}>
+              <p style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '0.15em', fontFamily: 'var(--font-syne)' }}>NO PROJECTS PUBLISHED</p>
+              <p style={{ fontSize: '0.9rem', marginTop: '1rem', color: 'var(--text-dim)' }}>Visit the Admin Dashboard to add your cinematic work.</p>
+            </div>
+          )}
+        </div>
 
         {mainVlogs.length > visibleCount && (
-          <div className="flex center" style={{ marginTop: '8rem' }}>
+          <div className="flex center" style={{ marginTop: '5rem' }}>
             <button 
-              className="btn-luxury magnetic-btn flex center" 
-              disabled={isLoadingMore}
-              onClick={() => {
-                setIsLoadingMore(true);
-                setTimeout(() => {
-                  setVisibleCount(v => v + 6);
-                  setIsLoadingMore(false);
-                }, 1200);
-              }}
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', gap: '1rem' }}
+              className="btn-luxury"
+              onClick={() => setVisibleCount(prev => prev + 4)}
             >
-              {isLoadingMore ? (
-                <>
-                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
-                    <Loader2 size={18} />
-                  </motion.div>
-                  SYNCHRONIZING CONTENT...
-                </>
-              ) : (
-                "LOAD MORE WORKS"
-              )}
+              LOAD MORE PROJECTS
             </button>
           </div>
         )}

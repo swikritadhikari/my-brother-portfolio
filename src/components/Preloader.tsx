@@ -82,12 +82,12 @@ export default function Preloader() {
 
             <div style={{ position: 'relative', textAlign: 'center', zIndex: 10 }}>
               {/* BRAND TEXT REVEAL */}
-              <div style={{ overflow: 'hidden', display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+              <div style={{ overflow: 'hidden', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '2rem' }}>
                 {words.map((char, i) => (
                   <motion.span
                     key={i}
-                    initial={{ y: 80, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
+                    initial={{ y: 80, opacity: 0, filter: 'blur(10px)' }}
+                    animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
                     transition={{ 
                       duration: 1, 
                       ease: [0.16, 1, 0.3, 1],
@@ -100,10 +100,7 @@ export default function Preloader() {
                       fontWeight: 900,
                       letterSpacing: '0.05em',
                       color: char === " " ? "transparent" : "white",
-                      width: char === " " ? "0.5em" : "auto",
-                      background: 'linear-gradient(to bottom, #fff, rgba(255,255,255,0.3))',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: char === " " ? "transparent" : "transparent"
+                      width: char === " " ? "0.5em" : "auto"
                     }}
                   >
                     {char}

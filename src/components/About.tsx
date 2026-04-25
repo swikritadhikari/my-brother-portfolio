@@ -46,7 +46,7 @@ export default function About() {
         backgroundImage: settings.aboutBgImage ? `url(${settings.aboutBgImage})` : 'none',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
+        backgroundAttachment: 'scroll' // Changed from fixed for better mobile support
       }}
     >
       {/* Dark gradient overlay for text readability */}

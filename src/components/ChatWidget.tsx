@@ -25,9 +25,10 @@ export default function ChatWidget() {
   const [sessionConvId, setSessionConvId] = useState<string | null>(null);
 
   // Form states for new leads
-  const [visitorName, setVisitorName] = useState("");
-  const [visitorEmail, setVisitorEmail] = useState("");
   const [composeText, setComposeText] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showPeek, setShowPeek] = useState(false);
+  const [lastMessagePeek, setLastMessagePeek] = useState("");
   const [isStarting, setIsStarting] = useState(false);
   const msgCounter = useRef(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -67,9 +68,18 @@ export default function ChatWidget() {
       },
     );
 
-    channel.bind("new-message", () => {
-      console.log("Pusher event received: new-message");
+    channel.bind("new-message", (data: any) => {
+      console.log("Pusher event received: new-message", data);
       load();
+      // If chat is closed, increment unread count and show peek
+      if (!isOpen) {
+        setUnreadCount(prev => prev + 1);
+        if (data.text) {
+          setLastMessagePeek(data.text);
+          setShowPeek(true);
+          setTimeout(() => setShowPeek(false), 5000); // Hide peek after 5s
+        }
+      }
     });
 
     return () => {
@@ -167,17 +177,12 @@ export default function ChatWidget() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="chat-window-container"
             style={{
               position: "fixed",
-              bottom: "5rem",
-              right: "1.5rem",
-              width: "calc(100% - 3rem)",
-              maxWidth: "350px",
-              height: "calc(100dvh - 10rem)",
-              maxHeight: "500px",
               background: "rgba(15,15,15,0.95)",
               backdropFilter: "blur(20px)",
               border: "1px solid rgba(255,255,255,0.1)",
@@ -423,7 +428,10 @@ export default function ChatWidget() {
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          setUnreadCount(0);
+        }}
         style={{
           position: "fixed",
           bottom: "1.5rem",
@@ -443,6 +451,62 @@ export default function ChatWidget() {
         }}
       >
         {isOpen ? <X size={24} /> : <MessageSquare size={24} />}
+        
+        {unreadCount > 0 && !isOpen && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="chat-badge"
+            style={{
+              position: "absolute",
+              top: "-5px",
+              right: "-5px",
+              background: "#ef4444",
+              color: "white",
+              fontSize: "0.65rem",
+              fontWeight: 900,
+              width: "20px",
+              height: "20px",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "2px solid var(--background)",
+              boxShadow: "0 4px 10px rgba(239, 68, 68, 0.4)"
+            }}
+          >
+            {unreadCount}
+          </motion.div>
+        )}
+
+        {showPeek && !isOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            style={{
+              position: 'absolute',
+              right: 'calc(100% + 1rem)',
+              bottom: '0.5rem',
+              width: '200px',
+              background: 'rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: '1rem',
+              padding: '0.75rem 1rem',
+              fontSize: '0.8rem',
+              color: 'white',
+              pointerEvents: 'none',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+              lineHeight: 1.4
+            }}
+          >
+            <div style={{ fontWeight: 800, color: 'var(--accent)', fontSize: '0.6rem', textTransform: 'uppercase', marginBottom: '0.2rem', letterSpacing: '0.1em' }}>New Message</div>
+            <div style={{ opacity: 0.9, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {lastMessagePeek}
+            </div>
+          </motion.div>
+        )}
       </motion.button>
     </div>
   );

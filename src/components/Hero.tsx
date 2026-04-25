@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import gsap from 'gsap';
 import { portfolioStore } from '@/lib/portfolioStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { Loader2, X } from 'lucide-react';
 
 
@@ -42,11 +43,28 @@ export default function Hero() {
         stagger: 0.1
       });
 
-      gsap.from('.hero-glow', {
-        opacity: 0,
-        scale: 0.5,
-        duration: 3,
-        ease: 'power2.out'
+      gsap.to('.hero-glow', {
+        opacity: 0.6,
+        scale: 1.2,
+        duration: 4,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut'
+      });
+
+      // Floating Icons Parallax
+      gsap.to('.floating-icon', {
+        y: 'random(-20, 20)',
+        x: 'random(-20, 20)',
+        rotation: 'random(-15, 15)',
+        duration: 'random(2, 4)',
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+        stagger: {
+          each: 0.2,
+          from: 'random'
+        }
       });
     }, containerRef);
 
@@ -111,8 +129,8 @@ export default function Hero() {
         <p className="fade-up" style={{ 
           color: 'var(--text-dim)', 
           maxWidth: '800px', 
-          margin: '0 auto 4rem', 
-          fontSize: '1.5rem',
+          margin: '0 auto 3rem', 
+          fontSize: 'clamp(1rem, 3vw, 1.5rem)',
           fontWeight: '300',
           lineHeight: '1.4',
           opacity: 0
@@ -121,27 +139,44 @@ export default function Hero() {
         </p>
 
         <div className="fade-up flex center" style={{ gap: '2rem', opacity: 0 }}>
-          <button 
-            type="button"
-            className="btn-luxury magnetic-btn flex center" 
-            style={{ gap: '1rem' }}
-            onClick={handleOpenShowreel}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-            Watch Showreel
-          </button>
-          <button 
-            type="button"
-            className="btn-luxury magnetic-btn" 
-            style={{ background: 'var(--glass)', border: '1px solid var(--glass-border)' }}
-            onClick={() => {
-              document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-          >
-            EXPLORE WORK
-          </button>
+          <div className="magnetic-wrap">
+            <button 
+              type="button"
+              className="btn-luxury magnetic-btn flex center" 
+              style={{ gap: '1rem' }}
+              onClick={handleOpenShowreel}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              Watch Showreel
+            </button>
+          </div>
+          <div className="magnetic-wrap">
+            <button 
+              type="button"
+              className="btn-luxury magnetic-btn" 
+              style={{ background: 'var(--glass)', border: '1px solid var(--glass-border)', color: 'white' }}
+              onClick={() => {
+                document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              EXPLORE WORK
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* FLOATING DECORATIONS */}
+      <div className="desktop-only" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1 }}>
+        <div className="floating-icon" style={{ position: 'absolute', top: '20%', left: '10%', opacity: 0.2 }}>
+           <div style={{ width: '60px', height: '60px', borderRadius: '15px', background: 'linear-gradient(45deg, #Pr, #6a1b9a)', border: '1px solid rgba(255,255,255,0.1)' }} />
+        </div>
+        <div className="floating-icon" style={{ position: 'absolute', bottom: '30%', right: '15%', opacity: 0.2 }}>
+           <div style={{ width: '80px', height: '80px', borderRadius: '20px', background: 'linear-gradient(45deg, #ae3d33, #000)', border: '1px solid rgba(255,255,255,0.1)' }} />
+        </div>
+        <div className="floating-icon" style={{ position: 'absolute', top: '40%', right: '10%', opacity: 0.15 }}>
+           <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'linear-gradient(45deg, #3178c6, #000)', border: '1px solid rgba(255,255,255,0.1)' }} />
         </div>
       </div>
 
@@ -168,7 +203,7 @@ export default function Hero() {
                 height: '100%', 
                 maxHeight: 'min(850px, 100dvh)', 
                 background: '#000', 
-                borderRadius: 'min(1.5rem, 5vw)', 
+                borderRadius: 'min(1.5rem, 4vw)', 
                 overflow: 'hidden', 
                 boxShadow: '0 40px 100px rgba(0,0,0,0.8)' 
               }}
@@ -199,8 +234,14 @@ export default function Hero() {
 
               {/* Story Header */}
               <div style={{ position: 'absolute', top: '40px', left: '15px', right: '15px', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 10 }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid var(--accent)', padding: '2px', overflow: 'hidden' }}>
-                  <img src={settings.avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid var(--accent)', padding: '2px', overflow: 'hidden', position: 'relative' }}>
+                  <Image 
+                    src={settings.avatarUrl} 
+                    alt="Editor Avatar"
+                    fill
+                    style={{ objectFit: 'cover', borderRadius: '50%' }} 
+                    unoptimized
+                  />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <span style={{ color: 'white', fontWeight: 800, fontSize: '13px', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{settings.siteName}</span>

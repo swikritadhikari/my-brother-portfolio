@@ -35,9 +35,9 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer id="contact" ref={containerRef} style={{ padding: '10rem 2rem', textAlign: 'center', background: '#050505', borderTop: '1px solid rgba(255,255,255,0.05)', position: 'relative', zIndex: 10 }}>
+    <footer id="contact" ref={containerRef} style={{ padding: 'clamp(4rem, 10vw, 10rem) 1.5rem', textAlign: 'center', background: '#050505', borderTop: '1px solid rgba(255,255,255,0.05)', position: 'relative', zIndex: 10 }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <h2 className="footer-reveal" style={{ fontSize: 'clamp(3rem, 8vw, 6rem)', fontWeight: 900, marginBottom: '3rem', letterSpacing: '-0.04em', fontFamily: 'Syne, sans-serif', lineHeight: 1.1 }}>
+        <h2 className="footer-reveal" style={{ fontSize: 'clamp(2.5rem, 8vw, 6rem)', fontWeight: 900, marginBottom: '3rem', letterSpacing: '-0.04em', fontFamily: 'Syne, sans-serif', lineHeight: 1.1 }}>
           {settings.footerLine1} <br/><span style={{ color: 'var(--accent)' }}>{settings.footerLine2}</span>
         </h2>
         
@@ -57,7 +57,7 @@ export default function Footer() {
         </div>
 
         {/* Functional Social Links */}
-        <div className="footer-reveal" style={{ marginTop: '5rem', display: 'flex', justifyContent: 'center', gap: '3rem', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '0.8rem', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+        <div className="footer-reveal footer-socials" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '0.8rem', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
           {settings.instagram && <a href={settings.instagram} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.3s' }} onMouseEnter={e => e.currentTarget.style.color = 'white'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>Instagram</a>}
           {settings.linkedin && <a href={settings.linkedin} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.3s' }} onMouseEnter={e => e.currentTarget.style.color = 'white'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>LinkedIn</a>}
           {settings.youtube && <a href={settings.youtube} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.3s' }} onMouseEnter={e => e.currentTarget.style.color = 'white'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}>YouTube</a>}

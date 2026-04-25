@@ -63,7 +63,8 @@ const ADMIN_CSS = `
     top: 0;
     height: 100vh;
     z-index: 100;
-    background: #050505;
+    background: rgba(5,5,5,0.8);
+    backdrop-filter: blur(20px);
   }
 
   .admin-main {
@@ -85,81 +86,137 @@ const ADMIN_CSS = `
     gap: 1rem;
   }
 
-  .tab-header {
+  .video-grid-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  .inbox-layout {
     display: flex;
-    justify-content: space-between;
+    gap: 2rem;
+    height: calc(100vh - 120px);
+  }
+
+  .inbox-left {
+    width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border-right: 1px solid rgba(255,255,255,0.05);
+    padding-right: 1.5rem;
+  }
+
+  .video-row {
+    display: flex;
     align-items: center;
-    margin-bottom: 3rem;
+    gap: 1.25rem;
+    padding: 1.25rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 1.5rem;
+    transition: border-color 0.3s;
   }
 
   .nav-label { display: block; }
-  .nav-icon-only { display: none; }
 
-  @media (max-width: 1024px) {
+  /* TABLET TIER */
+  @media (max-width: 1100px) {
+    .admin-sidebar {
+      width: 80px;
+      padding: 2.5rem 0.75rem;
+      align-items: center;
+    }
+    .nav-label {
+      display: none;
+    }
+    .admin-sidebar > div:first-child {
+      padding-left: 0 !important;
+      text-align: center;
+    }
+    .admin-sidebar > div:first-child p:first-child {
+      font-size: 1.2rem !important;
+    }
+    .admin-sidebar > div:first-child p:last-child {
+      display: none;
+    }
+    .admin-sidebar > div:last-child {
+      display: none;
+    }
+    .admin-main {
+      padding: 2rem;
+    }
     .stat-grid {
       grid-template-columns: repeat(2, 1fr);
     }
+    .video-grid-layout {
+      grid-template-columns: 1fr;
+    }
+    .inbox-layout {
+      flex-direction: column;
+      height: auto;
+    }
+    .inbox-left {
+      width: 100%;
+      border-right: none;
+      padding-right: 0;
+    }
   }
 
+  /* MOBILE TIER */
   @media (max-width: 768px) {
     .admin-shell {
       flex-direction: column;
     }
-
-    .action-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .tab-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-    
     .admin-sidebar {
       width: 100%;
-      height: auto;
+      height: 70px;
       position: fixed;
       bottom: 0;
       top: auto;
       flex-direction: row;
       justify-content: space-around;
-      padding: 0.75rem;
+      padding: 0 0.5rem;
       border-right: none;
       border-top: 1px solid rgba(255,255,255,0.1);
-      background: rgba(5,5,5,0.8);
+      background: rgba(5,5,5,0.85);
       backdrop-filter: blur(20px);
       gap: 0;
     }
-
-    .admin-sidebar > div:first-child, 
-    .admin-sidebar > div:last-child {
+    .admin-sidebar > div:first-child {
       display: none;
     }
-
+    .admin-nav-item {
+      width: auto !important;
+      padding: 0.75rem !important;
+      justify-content: center;
+    }
     .admin-main {
       padding: 1.5rem;
-      padding-bottom: 80px;
+      padding-bottom: 100px;
     }
-
     .stat-grid {
       grid-template-columns: 1fr;
-      gap: 1rem;
     }
-
-    .nav-label { display: none; }
-    .nav-icon-only { display: block; }
-    
-    .admin-nav-item {
-      padding: 0.75rem !important;
-      justify-content: center !important;
-      width: auto !important;
-      flex: 1;
+    .action-grid {
+      grid-template-columns: 1fr;
     }
-
     .admin-title {
       font-size: 1.75rem !important;
+    }
+    .video-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+    }
+    .video-row > div:first-child {
+      width: 100% !important;
+      aspect-ratio: 16/9;
+    }
+    .video-row > div:last-child {
+      justify-content: flex-start;
+      margin-top: 0.5rem;
     }
   }
 `;
@@ -190,9 +247,10 @@ function NavItem({
         fontSize: "0.85rem",
         fontWeight: 700,
         transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-        background: active ? "white" : "transparent",
-        color: active ? "black" : "rgba(255,255,255,0.4)",
-        border: "none",
+        background: active ? "var(--accent)" : "transparent",
+        color: active ? "white" : "rgba(255,255,255,0.5)",
+        border: active ? "1px solid var(--accent)" : "1px solid transparent",
+        boxShadow: active ? "0 10px 20px rgba(59, 130, 246, 0.2)" : "none",
         cursor: "pointer",
         textAlign: "left",
       }}
@@ -289,16 +347,7 @@ function VideoRow({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "1.25rem",
-        padding: "1.25rem",
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.07)",
-        borderRadius: "1.5rem",
-        transition: "border-color 0.3s",
-      }}
+      className="video-row"
     >
       <div
         style={{
@@ -629,8 +678,8 @@ export default function AdminPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#000",
-          padding: "2rem",
+          background: "#050505",
+          padding: "clamp(1rem, 5vw, 2rem)",
         }}
       >
         <motion.div
@@ -1078,14 +1127,7 @@ export default function AdminPage() {
                   ))}
               </div>
 
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "minmax(0, 1fr) 380px",
-                  gap: "2.5rem",
-                  alignItems: "start",
-                }}
-              >
+              <div className="video-grid-layout">
                 {/* Video List */}
                 <div
                   style={{
@@ -1914,13 +1956,7 @@ export default function AdminPage() {
                       >
                         Preloader Settings
                       </h3>
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr 1fr",
-                          gap: "1.5rem",
-                        }}
-                      >
+                      <div className="action-grid">
                         <div>
                           <label className={LABEL_CLS}>
                             Brand Name (Characters animated)
@@ -2072,23 +2108,10 @@ export default function AdminPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
-              style={{
-                display: "flex",
-                gap: "2rem",
-                height: "calc(100vh - 120px)",
-              }}
+              className="inbox-layout"
             >
               {/* Left Pane - List */}
-              <div
-                style={{
-                  width: "350px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1rem",
-                  borderRight: "1px solid rgba(255,255,255,0.05)",
-                  paddingRight: "1.5rem",
-                }}
-              >
+              <div className="inbox-left">
                 <h1
                   style={{
                     fontFamily: "Syne, sans-serif",

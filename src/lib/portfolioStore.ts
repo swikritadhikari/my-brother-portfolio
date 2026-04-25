@@ -43,26 +43,26 @@ export interface Conversation {
 }
 
 const defaultSettings: SiteSettings = {
-  siteName: 'BINAYA.',
-  heroTagline: 'Creative Director & Elite Editor',
-  heroLine1: 'CRAFTING',
-  heroLine2: 'CINEMATIC',
-  heroLine3: 'STORIES',
-  heroDescription: 'Transforming vision into high-end visual reality. Specializing in narrative pace, color physics, and emotional resonance.',
-  aboutText: 'Professional video editor with over 10 years of experience in high-end commercial and narrative work.',
-  contactEmail: 'hello@binaya.com',
-  showreelId: 'dQw4w9WgXcQ',
-  instagram: 'https://instagram.com/',
-  linkedin: 'https://linkedin.com/',
-  youtube: 'https://youtube.com/',
-  aboutBgImage: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=2000',
-  footerLine1: 'LET\'S CREATE',
-  footerLine2: 'SOMETHING EPIC',
-  copyrightText: '© 2026 All rights reserved. Made by Sulabh (aka Swikrit)',
+  siteName: '',
+  heroTagline: '',
+  heroLine1: '',
+  heroLine2: '',
+  heroLine3: '',
+  heroDescription: '',
+  aboutText: '',
+  contactEmail: '',
+  showreelId: '',
+  instagram: '',
+  linkedin: '',
+  youtube: '',
+  aboutBgImage: '',
+  footerLine1: '',
+  footerLine2: '',
+  copyrightText: `© ${new Date().getFullYear()} All rights reserved.`,
   faviconUrl: '/favicon.ico',
-  preloaderText: 'BINAYA CINEMATICS',
-  preloaderSubtext: 'INITIALIZING CREATIVE FLOW',
-  avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80'
+  preloaderText: 'INITIALIZING',
+  preloaderSubtext: 'LOADING CREATIVE FLOW',
+  avatarUrl: ''
 };
 
 interface PortfolioData {
